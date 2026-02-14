@@ -1,0 +1,10 @@
+Flask
+Flask-SocketIO
+python-socketio
+python-engineio
+uiautomator2
+Pillow
+opencv-python
+numpy
+google-genai
+requests

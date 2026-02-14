@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tinder Automation Console</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <div class="header-left">
+                    <div class="logo">
+                        <i class="fas fa-heart"></i>
+                        <h1>AutoTinder</h1>
+                    </div>
+                    <button id="controlBtn" class="header-control-button start-button">
+                        <i class="fas fa-play"></i>
+                    </button>
+                    <button id="settingsBtn" class="header-control-button settings-button">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+                
+                <div class="header-stats">
+                    <div class="header-stat-card">
+                        <div class="header-stat-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="header-stat-content">
+                            <div class="header-stat-value" id="totalProfiles">0</div>
+                            <div class="header-stat-label">Total</div>
+                        </div>
+                    </div>
+                    
+                    <div class="header-stat-card">
+                        <div class="header-stat-icon liked">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <div class="header-stat-content">
+                            <div class="header-stat-value" id="likedProfiles">0</div>
+                            <div class="header-stat-label">Liked</div>
+                        </div>
+                    </div>
+                    
+                    <div class="header-stat-card">
+                        <div class="header-stat-icon disliked">
+                            <i class="fas fa-times"></i>
+                        </div>
+                        <div class="header-stat-content">
+                            <div class="header-stat-value" id="dislikedProfiles">0</div>
+                            <div class="header-stat-label">Disliked</div>
+                        </div>
+                    </div>
+                    
+                    <div class="header-stat-card">
+                        <div class="header-stat-icon">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="header-stat-content">
+                            <div class="header-stat-value" id="likeRate">0%</div>
+                            <div class="header-stat-label">Rate</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="console-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <i class="fas fa-terminal"></i>
+                        <span>Console Output</span>
+                    </div>
+                    <div class="panel-controls">
+                        <button id="clearBtn" class="panel-btn" title="Clear Console">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button id="scrollBtn" class="panel-btn" title="Auto-scroll">
+                            <i class="fas fa-arrow-down"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="console" class="console-output">
+                    <div class="console-line welcome">
+                        <span class="timestamp">[System]</span>
+                        <span class="message">Tinder Automation Console Ready</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="device-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <i class="fas fa-mobile-alt"></i>
+                        <span>Device Screen</span>
+                    </div>
+                    <div class="panel-controls">
+                        <span id="mirrorStatus" class="mirror-status">
+                            <i class="fas fa-circle"></i>
+                            <span>Disconnected</span>
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="device-content">
+                    <div id="devicePlaceholder" class="device-placeholder">
+                        <i class="fas fa-mobile-alt"></i>
+                        <p>Device screen will appear here</p>
+                        <small>Start automation to begin screen mirroring</small>
+                    </div>
+                    
+                    <div id="deviceScreen" class="device-screen" style="display: none;">
+                        <img id="screenImage" alt="Device Screen" />
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content settings-modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-cog"></i> Settings</h3>
+                <button class="close-modal" id="closeSettingsModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="settingsForm">
+                    <div class="settings-tabs">
+                        <button type="button" class="tab-button active" data-tab="basic">Basic</button>
+                        <button type="button" class="tab-button" data-tab="advanced">Advanced</button>
+                        <button type="button" class="tab-button" data-tab="prompts">Prompts</button>
+                    </div>
+
+                    <div class="tab-content" id="basic-tab">
+                        <div class="form-group">
+                            <label for="gemini_api_key">Gemini API Key</label>
+                            <input type="password" id="gemini_api_key" name="gemini_api_key" placeholder="Enter your Gemini API key" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="decision_criteria">Decision Criteria</label>
+                            <textarea id="decision_criteria" name="decision_criteria" placeholder="e.g., Age 20-35, less drinking" required></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="package_name">App Package Name</label>
+                            <input type="text" id="package_name" name="package_name" placeholder="com.tinder" required>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="advanced-tab" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="model_heavy">Heavy Model</label>
+                                <input type="text" id="model_heavy" name="model_heavy" placeholder="gemini-2.5-flash" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="model_fast">Fast Model</label>
+                                <input type="text" id="model_fast" name="model_fast" placeholder="gemini-2.5-flash" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="short_wait">Short Wait (seconds)</label>
+                                <input type="number" id="short_wait" name="short_wait" step="0.1" min="0.1" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="medium_wait">Medium Wait (seconds)</label>
+                                <input type="number" id="medium_wait" name="medium_wait" step="0.1" min="0.1" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="long_wait">Long Wait (seconds)</label>
+                                <input type="number" id="long_wait" name="long_wait" step="0.1" min="0.1" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="prompts-tab" style="display: none;">
+                        <div class="form-group">
+                            <label for="decision_prompt">Decision Prompt</label>
+                            <textarea id="decision_prompt" name="decision_prompt" rows="8" placeholder="Enter the AI decision prompt..." required></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="ui_resolver_prompt">UI Resolver Prompt</label>
+                            <textarea id="ui_resolver_prompt" name="ui_resolver_prompt" rows="8" placeholder="Enter the UI resolver prompt..." required></textarea>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" id="cancelSettings">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Settings</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div id="errorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-exclamation-triangle"></i> Error</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="errorMessage">An error occurred</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-check-circle"></i> Success</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="successMessage">Operation completed successfully</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
